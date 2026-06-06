@@ -23,6 +23,20 @@ _INSTRUCTIONS = [
     "wipe the table with the cloth",
 ]
 
+# Coarse manipulation phases used as the clip's narration / semantic annotation.
+_PHASES = ["approach object", "reach and align", "grasp", "manipulate", "retract hand"]
+
+
+def _narration_segments(num_frames: int, fps: float) -> list[dict]:
+    """Split a clip into evenly spaced narration phases."""
+    duration = (num_frames - 1) / fps if num_frames > 1 else 1.0 / fps
+    n = min(len(_PHASES), max(1, num_frames))
+    bounds = [duration * i / n for i in range(n + 1)]
+    return [
+        {"start": round(bounds[i], 3), "end": round(bounds[i + 1], 3), "text": _PHASES[i]}
+        for i in range(n)
+    ]
+
 
 def _base_hand(offset: np.ndarray) -> np.ndarray:
     """A canonical open hand (21x3) around ``offset`` in the camera frame."""
@@ -141,6 +155,7 @@ def generate_dataset(
             "fps": fps,
             "source": "synthetic",
             "intrinsics": intr.to_dict(),
+            "narrations": _narration_segments(num_frames, fps),
             "metadata": {"synthetic_seed": seed + e},
         }
         with open(os.path.join(ep_dir, "meta.json"), "w", encoding="utf-8") as fh:
