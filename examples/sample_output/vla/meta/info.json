@@ -1,0 +1,46 @@
+{
+  "codebase_version": "ego_pipeline-vla-0.1",
+  "robot_type": "egocentric_hand",
+  "fps": null,
+  "total_episodes": 2,
+  "total_frames": 12,
+  "features": {
+    "action": {
+      "dtype": "float32",
+      "shape": [
+        7
+      ],
+      "names": [
+        "dx",
+        "dy",
+        "dz",
+        "rx",
+        "ry",
+        "rz",
+        "gripper"
+      ]
+    },
+    "observation.state": {
+      "dtype": "float32",
+      "shape": [
+        7
+      ],
+      "names": [
+        "x",
+        "y",
+        "z",
+        "rx",
+        "ry",
+        "rz",
+        "gripper"
+      ]
+    },
+    "observation.images.ego": {
+      "dtype": "image_path",
+      "shape": []
+    },
+    "task": {
+      "dtype": "string"
+    }
+  }
+}

@@ -166,6 +166,28 @@ python -m ego_pipeline run        --config config.yaml
 python -m ego_pipeline run        --reader NAME --root PATH --out DIR [--fps F --viz --vla --world-model]
 ```
 
+## 训练数据加载器（`datasets.py`）
+
+导出后用内置加载器直接喂给训练循环（无需硬依赖 PyTorch，可被 `DataLoader` 包裹）：
+
+```python
+from ego_pipeline.datasets import VLADataset, WorldModelDataset
+
+# VLA：逐步 transition，支持 action chunk 与 q01/q99 归一化
+vla = VLADataset("out/vla", load_images=True, action_horizon=4, normalize=True)
+sample = vla[0]   # {image, state(7,), action(7,), action_chunk(H,7), task, ...}
+
+# 世界模型：视频 clip + 相机 action
+wm = WorldModelDataset("out/world_model", load_images=True)
+clip = wm[0]      # {frames(L,H,W,3), actions(L-1,6), caption, fps, clip_id}
+```
+
+`examples/` 下提供了**已生成好的样例产物**和一个可运行示例：
+
+```bash
+python examples/torch_dataloader_example.py
+```
+
 ## 测试
 
 ```bash
