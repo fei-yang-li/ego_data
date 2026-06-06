@@ -1,0 +1,16 @@
+{
+  "language_instruction": "pick up the mug and place it on the shelf",
+  "fps": 30.0,
+  "source": "synthetic",
+  "intrinsics": {
+    "width": 640,
+    "height": 480,
+    "fx": 480.0,
+    "fy": 480.0,
+    "cx": 320.0,
+    "cy": 240.0
+  },
+  "metadata": {
+    "synthetic_seed": 0
+  }
+}
