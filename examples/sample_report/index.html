@@ -1,46 +1,196 @@
-<!doctype html><html lang="zh"><head><meta charset="utf-8">
-<title>Ego clip annotations</title><style>
-body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#0f1116;color:#e6e6e6}
-header{padding:16px 24px;background:#161922;border-bottom:1px solid #262b36}
-h1{margin:0;font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;padding:20px}
-.card{background:#161922;border:1px solid #262b36;border-radius:10px;padding:14px}
-.card h2{font-size:15px;margin:0 0 6px}
-.src{font-size:11px;color:#7f8a9a;font-weight:normal}
-.instr{color:#78dcff;margin:4px 0;font-size:13px}
-.meta{color:#9aa3b2;font-size:12px;margin:4px 0}
-.tag{background:#23314a;color:#a9c7ff;border-radius:4px;padding:1px 6px;font-size:11px;margin-right:2px}
-.media{margin:8px 0}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th,td{border:1px solid #2a3140;padding:4px 6px;text-align:left}
-th{background:#1d2230}
-details{margin-top:8px}
-summary{cursor:pointer;color:#ffd778;font-size:13px}
-</style></head><body>
-<header><h1>Egocentric 数据视频 &amp; clip 语义标注</h1></header>
-<div class="grid">
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Egocentric 数据可视化</title>
+<style>
+  :root {
+    --bg: #0f1116; --panel: #161922; --border: #262b36; --fg: #e6e6e6;
+    --muted: #9aa3b2; --accent: #78dcff; --narr: #ffd778;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, "Segoe UI", Arial, sans-serif; margin: 0;
+         background: var(--bg); color: var(--fg); }
+  header { padding: 14px 22px; background: var(--panel);
+           border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+  h1 { margin: 0 0 8px; font-size: 17px; }
+  .stats { color: var(--muted); font-size: 13px; }
+  .stats b { color: var(--fg); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  input[type=text], select { background: #0d0f14; color: var(--fg);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  input[type=text] { min-width: 240px; }
+  .chip { background: #1d2230; color: #a9c7ff; border: 1px solid var(--border);
+    border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; user-select: none; }
+  .chip.on { background: #2c63b8; color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px; padding: 18px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; cursor: pointer; transition: border-color .15s; }
+  .card:hover { border-color: var(--accent); }
+  .card h3 { margin: 0 0 4px; font-size: 14px; }
+  .card .src { color: var(--muted); font-weight: normal; font-size: 11px; }
+  .instr { color: var(--accent); font-size: 13px; margin: 4px 0; }
+  .meta { color: var(--muted); font-size: 12px; margin: 4px 0; }
+  .tag { background: #23314a; color: #a9c7ff; border-radius: 4px; padding: 1px 6px;
+    font-size: 11px; margin-right: 3px; }
+  .thumb { width: 100%; border-radius: 6px; margin-top: 6px; background: #000; }
+  /* narration timeline */
+  .timeline { position: relative; height: 22px; background: #0d0f14; border-radius: 5px;
+    margin-top: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .seg { position: absolute; top: 0; height: 100%; display: flex; align-items: center;
+    justify-content: center; font-size: 10px; color: #0b0d12; overflow: hidden;
+    white-space: nowrap; border-right: 1px solid rgba(0,0,0,.35); }
+  /* modal */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.72); display: none;
+    align-items: center; justify-content: center; z-index: 20; padding: 20px; }
+  .modal.open { display: flex; }
+  .sheet { background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    max-width: 900px; width: 100%; max-height: 92vh; overflow: auto; padding: 18px; }
+  .sheet h2 { margin: 0 0 6px; font-size: 16px; }
+  .close { float: right; cursor: pointer; color: var(--muted); font-size: 20px; line-height: 1; }
+  video, .sheet img { width: 100%; border-radius: 8px; background: #000; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  th, td { border: 1px solid var(--border); padding: 4px 7px; text-align: left; }
+  th { background: #1d2230; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+  details > summary { cursor: pointer; color: var(--narr); margin-top: 10px; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Egocentric 数据可视化 <span id="hsub" class="src"></span></h1>
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="搜索 id / 指令 / narration…" />
+    <select id="sourceSel"><option value="">全部来源</option></select>
+    <span id="modChips"></span>
+  </div>
+</header>
 
-    <div class="card">
-      <h2>episode_0000 <span class="src">synthetic</span></h2>
-      <p class="instr">TASK: pick up the mug and place it on the shelf</p>
-      <p class="meta">8 frames · 0.233s · 30.0 fps · <span class="tag">rgb</span> <span class="tag">head_pose</span> <span class="tag">hands</span> <span class="tag">gaze</span> <span class="tag">narration</span></p>
-      <div class="media"><video controls loop muted width="100%" src="episode_0000.mp4"></video></div>
-      <details open><summary>语义标注 / narration segments</summary>
-        <table><tr><th>start (s)</th><th>end (s)</th><th>narration</th></tr><tr><td>0.00</td><td>0.03</td><td>approach object</td></tr><tr><td>0.07</td><td>0.07</td><td>reach and align</td></tr><tr><td>0.10</td><td>0.13</td><td>grasp</td></tr><tr><td>0.17</td><td>0.17</td><td>manipulate</td></tr><tr><td>0.20</td><td>0.23</td><td>retract hand</td></tr></table>
-      </details>
-      <details><summary>诊断图 / diagnostics</summary><img src="episode_0000_summary.png" width="100%" alt="summary"/></details>
-    </div>
-    
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" style="display:none">没有匹配的 clip</div>
 
-    <div class="card">
-      <h2>episode_0001 <span class="src">synthetic</span></h2>
-      <p class="instr">TASK: open the drawer and take out the spoon</p>
-      <p class="meta">8 frames · 0.233s · 30.0 fps · <span class="tag">rgb</span> <span class="tag">head_pose</span> <span class="tag">hands</span> <span class="tag">gaze</span> <span class="tag">narration</span></p>
-      <div class="media"><video controls loop muted width="100%" src="episode_0001.mp4"></video></div>
-      <details open><summary>语义标注 / narration segments</summary>
-        <table><tr><th>start (s)</th><th>end (s)</th><th>narration</th></tr><tr><td>0.00</td><td>0.03</td><td>approach object</td></tr><tr><td>0.07</td><td>0.07</td><td>reach and align</td></tr><tr><td>0.10</td><td>0.13</td><td>grasp</td></tr><tr><td>0.17</td><td>0.17</td><td>manipulate</td></tr><tr><td>0.20</td><td>0.23</td><td>retract hand</td></tr></table>
-      </details>
-      <details><summary>诊断图 / diagnostics</summary><img src="episode_0001_summary.png" width="100%" alt="summary"/></details>
-    </div>
-    
-</div></body></html>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+const CLIPS = [{"episode_id": "episode_0000", "source": "synthetic", "language_instruction": "pick up the mug and place it on the shelf", "duration_s": 0.233, "fps": 30.0, "num_frames": 8, "modalities": ["rgb", "head_pose", "hands", "gaze", "narration"], "narration_segments": [{"start": 0.0, "end": 0.033, "text": "approach object", "num_frames": 2}, {"start": 0.067, "end": 0.067, "text": "reach and align", "num_frames": 1}, {"start": 0.1, "end": 0.133, "text": "grasp", "num_frames": 2}, {"start": 0.167, "end": 0.167, "text": "manipulate", "num_frames": 1}, {"start": 0.2, "end": 0.233, "text": "retract hand", "num_frames": 2}], "metadata": {"synthetic_seed": 0}, "_video": "episode_0000.mp4", "_summary": "episode_0000_summary.png"}, {"episode_id": "episode_0001", "source": "synthetic", "language_instruction": "open the drawer and take out the spoon", "duration_s": 0.233, "fps": 30.0, "num_frames": 8, "modalities": ["rgb", "head_pose", "hands", "gaze", "narration"], "narration_segments": [{"start": 0.0, "end": 0.033, "text": "approach object", "num_frames": 2}, {"start": 0.067, "end": 0.067, "text": "reach and align", "num_frames": 1}, {"start": 0.1, "end": 0.133, "text": "grasp", "num_frames": 2}, {"start": 0.167, "end": 0.167, "text": "manipulate", "num_frames": 1}, {"start": 0.2, "end": 0.233, "text": "retract hand", "num_frames": 2}], "metadata": {"synthetic_seed": 1}, "_video": "episode_0001.mp4", "_summary": "episode_0001_summary.png"}];
+const PALETTE = ["#78dcff","#ffd778","#9ae6a4","#ff9e7a","#c9a0ff","#7ad7c4","#ff8fb0","#b6c97a"];
+
+function color(i){ return PALETTE[i % PALETTE.length]; }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
+function timelineHTML(clip){
+  const dur = clip.duration_s || 1e-6;
+  const segs = clip.narration_segments || [];
+  if(!segs.length) return '<div class="timeline"></div>';
+  let h = '<div class="timeline">';
+  segs.forEach((s,i)=>{
+    const left = Math.max(0, s.start/dur*100);
+    const w = Math.max(0.5, (s.end-s.start)/dur*100);
+    h += `<div class="seg" style="left:${left}%;width:${w}%;background:${color(i)}" `
+       + `title="${esc(s.text)}  (${s.start.toFixed(2)}–${s.end.toFixed(2)}s)">${esc(s.text)}</div>`;
+  });
+  return h + '</div>';
+}
+
+function cardHTML(clip, idx){
+  const mods = (clip.modalities||[]).map(m=>`<span class="tag">${esc(m)}</span>`).join("");
+  const thumb = clip._summary ? `<img class="thumb" src="${esc(clip._summary)}" loading="lazy"/>` : "";
+  return `<div class="card" data-idx="${idx}">
+    <h3>${esc(clip.episode_id)} <span class="src">${esc(clip.source)}</span></h3>
+    <div class="instr">TASK: ${esc(clip.language_instruction||"(none)")}</div>
+    <div class="meta">${clip.num_frames} frames · ${clip.duration_s}s · ${clip.fps} fps · ${mods}</div>
+    ${timelineHTML(clip)}
+    ${thumb}
+  </div>`;
+}
+
+function detailHTML(clip){
+  const media = clip._video
+    ? (clip._video.endsWith(".mp4")
+        ? `<video controls autoplay loop muted src="${esc(clip._video)}"></video>`
+        : `<img src="${esc(clip._video)}"/>`)
+    : "<i>no video</i>";
+  const segRows = (clip.narration_segments||[]).map((s,i)=>
+    `<tr><td style="color:${color(i)}">${s.start.toFixed(2)}</td><td>${s.end.toFixed(2)}</td>`
+    + `<td>${esc(s.text)}</td><td>${s.num_frames}</td></tr>`).join("")
+    || '<tr><td colspan="4"><i>no narration</i></td></tr>';
+  const metaRows = Object.entries(clip.metadata||{}).map(([k,v])=>
+    `<tr><td>${esc(k)}</td><td>${esc(JSON.stringify(v))}</td></tr>`).join("")
+    || '<tr><td colspan="2"><i>none</i></td></tr>';
+  return `<span class="close" onclick="closeModal()">×</span>
+    <h2>${esc(clip.episode_id)} <span class="src">${esc(clip.source)}</span></h2>
+    <div class="instr">TASK: ${esc(clip.language_instruction||"(none)")}</div>
+    <div class="meta">${clip.num_frames} frames · ${clip.duration_s}s · ${clip.fps} fps</div>
+    ${media}
+    ${timelineHTML(clip)}
+    <h3 style="font-size:13px;margin:12px 0 0;color:var(--narr)">语义标注 / narration segments</h3>
+    <table><tr><th>start</th><th>end</th><th>narration</th><th>#frames</th></tr>${segRows}</table>
+    <details><summary>诊断图 / diagnostics</summary>
+      ${clip._summary?`<img src="${esc(clip._summary)}"/>`:"<i>none</i>"}</details>
+    <details><summary>metadata</summary><table>${metaRows}</table></details>`;
+}
+
+// ---- state + filtering ----
+const state = { q:"", source:"", mods:new Set() };
+const allMods = [...new Set(CLIPS.flatMap(c=>c.modalities||[]))];
+const allSources = [...new Set(CLIPS.map(c=>c.source))];
+
+function matches(c){
+  if(state.source && c.source!==state.source) return false;
+  for(const m of state.mods){ if(!(c.modalities||[]).includes(m)) return false; }
+  if(state.q){
+    const hay = (c.episode_id+" "+c.language_instruction+" "
+      +(c.narration_segments||[]).map(s=>s.text).join(" ")).toLowerCase();
+    if(!hay.includes(state.q.toLowerCase())) return false;
+  }
+  return true;
+}
+
+function render(){
+  const grid = document.getElementById("grid");
+  const shown = CLIPS.map((c,i)=>[c,i]).filter(([c])=>matches(c));
+  grid.innerHTML = shown.map(([c,i])=>cardHTML(c,i)).join("");
+  document.getElementById("empty").style.display = shown.length ? "none" : "block";
+  grid.querySelectorAll(".card").forEach(el=>{
+    el.onclick = ()=>openModal(parseInt(el.dataset.idx,10));
+  });
+}
+
+function openModal(idx){
+  document.getElementById("sheet").innerHTML = detailHTML(CLIPS[idx]);
+  document.getElementById("modal").classList.add("open");
+}
+function closeModal(){ document.getElementById("modal").classList.remove("open"); }
+
+function init(){
+  const totalFrames = CLIPS.reduce((a,c)=>a+(c.num_frames||0),0);
+  const totalDur = CLIPS.reduce((a,c)=>a+(c.duration_s||0),0);
+  document.getElementById("stats").innerHTML =
+    `<b>${CLIPS.length}</b> clips · <b>${totalFrames}</b> frames · `
+    + `<b>${totalDur.toFixed(1)}</b>s · 来源: ${allSources.map(esc).join(", ")}`;
+
+  const sel = document.getElementById("sourceSel");
+  allSources.forEach(s=>{ const o=document.createElement("option"); o.value=s; o.textContent=s; sel.appendChild(o); });
+  sel.onchange = e=>{ state.source=e.target.value; render(); };
+
+  const mc = document.getElementById("modChips");
+  allMods.forEach(m=>{
+    const chip=document.createElement("span"); chip.className="chip"; chip.textContent=m;
+    chip.onclick=()=>{ chip.classList.toggle("on");
+      if(state.mods.has(m)) state.mods.delete(m); else state.mods.add(m); render(); };
+    mc.appendChild(chip);
+  });
+
+  document.getElementById("search").oninput = e=>{ state.q=e.target.value; render(); };
+  document.getElementById("modal").onclick = e=>{ if(e.target.id==="modal") closeModal(); };
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+  render();
+}
+init();
+</script>
+</body>
+</html>
