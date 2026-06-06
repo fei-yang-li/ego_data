@@ -190,13 +190,49 @@ def test_render_episode_video_and_report(tmp_path):
 
     result = build_report(episodes, str(tmp_path / "report"))
     assert os.path.isfile(result["index_html"])
+    assert os.path.isfile(result["gallery_html"])
     anns = json.loads(open(result["annotations_json"], encoding="utf-8").read())
     assert len(anns) == 2
     assert anns[0]["narration_segments"]
     assert "narration" in anns[0]["modalities"]
-    html = open(result["index_html"], encoding="utf-8").read()
-    assert "NARRATION" not in html or "narration segments" in html
-    assert "TASK" in html
+
+    # index.html is the interactive viewer: data inlined, placeholder replaced.
+    index = open(result["index_html"], encoding="utf-8").read()
+    assert "__CLIP_DATA__" not in index
+    assert "const CLIPS = [" in index
+    assert ".mp4" in index or ".gif" in index
+
+
+def test_interactive_viewer_injection(tmp_path):
+    from ego_pipeline.viewer import render_viewer, viewer_from_annotations_file
+
+    records = [
+        {
+            "episode_id": "ep</script>x",  # ensure script-breakout is escaped
+            "source": "synthetic",
+            "language_instruction": "do a thing",
+            "duration_s": 1.0,
+            "fps": 10.0,
+            "num_frames": 10,
+            "modalities": ["rgb", "hands"],
+            "narration_segments": [{"start": 0.0, "end": 1.0, "text": "grasp", "num_frames": 10}],
+            "metadata": {},
+        }
+    ]
+    out = tmp_path / "v.html"
+    render_viewer(records, str(out))
+    html = out.read_text(encoding="utf-8")
+    assert "__CLIP_DATA__" not in html
+    assert "</script>x" not in html  # the literal </ was escaped
+    assert "<\\/script>x" in html
+
+    # Regenerate from a json file, linking matching media if present.
+    (tmp_path / "clip_annotations.json").write_text(json.dumps(records), encoding="utf-8")
+    (tmp_path / "ep_x.mp4").write_bytes(b"\x00")  # safe id has '/' replaced; here none
+    out2 = viewer_from_annotations_file(
+        str(tmp_path / "clip_annotations.json"), str(tmp_path / "regen.html")
+    )
+    assert os.path.isfile(out2)
 
 
 def test_dataset_loaders(tmp_path):
