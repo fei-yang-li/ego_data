@@ -52,10 +52,10 @@ def _hand_pixels(
     return frame.intrinsics.project(kpts)
 
 
-def render_frame_overlay(
-    frame: EgoFrame, out_path: str, canvas_size: tuple[int, int] = (640, 480)
-) -> str:
-    """Render one frame with hand skeleton + gaze overlay to ``out_path``."""
+def render_frame_overlay_image(
+    frame: EgoFrame, canvas_size: tuple[int, int] = (640, 480)
+):
+    """Build a PIL image of one frame with hand skeleton + gaze overlay."""
     from PIL import Image, ImageDraw
 
     img = None
@@ -95,7 +95,14 @@ def render_frame_overlay(
                 outline=(0, 255, 0),
                 width=3,
             )
+    return img
 
+
+def render_frame_overlay(
+    frame: EgoFrame, out_path: str, canvas_size: tuple[int, int] = (640, 480)
+) -> str:
+    """Render one frame with hand skeleton + gaze overlay to ``out_path``."""
+    img = render_frame_overlay_image(frame, canvas_size)
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     img.save(out_path)
     return out_path
