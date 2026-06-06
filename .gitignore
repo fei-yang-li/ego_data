@@ -8,3 +8,15 @@ Thumbs.db
 .idea/
 .vscode/
 *.sublime-*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Pipeline generated outputs
+out/
+
