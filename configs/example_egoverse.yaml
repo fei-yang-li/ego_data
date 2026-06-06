@@ -19,6 +19,16 @@ visualize:
   num_overlay_frames: 4
   max_episodes: 8
 
+report:                      # 完整数据视频 + clip 语义标注（HTML 报告）
+  enabled: true
+  out_dir: out/report
+  with_video: true
+  with_summary: true
+  video_fmt: auto            # auto -> mp4（有 OpenCV/ffmpeg 时）否则 gif
+  video_fps: 10
+  video_width: 640
+  max_episodes: 20
+
 export:
   vla:
     enabled: true
