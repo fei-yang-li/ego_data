@@ -8,16 +8,24 @@
 examples/
 ├── README.md
 ├── torch_dataloader_example.py   # 加载样例数据的可运行示例
-├── sample_dataset/               # 合成的 EgoVerse 风格源数据（2 episodes × 6 帧）
+├── sample_dataset/               # 合成的 EgoVerse 风格源数据（2 episodes × 8 帧，含 narration）
 │   └── episode_000{0,1}/{meta.json, poses.npz, rgb/*.jpg}
-└── sample_output/                # pipeline 导出的训练数据
-    ├── vla/                      # VLA 格式（LeRobot/RLDS 风格）
-    │   ├── meta/{info.json, episodes.jsonl, stats.json}
-    │   └── data/episode_*.parquet
-    └── world_model/              # 世界模型格式（EgoVid 风格）
-        ├── meta/{info.json, index.jsonl, stats.json}
-        └── actions/episode_*.npy
+├── sample_output/                # pipeline 导出的训练数据
+│   ├── vla/                      # VLA 格式（LeRobot/RLDS 风格）
+│   │   ├── meta/{info.json, episodes.jsonl, stats.json}
+│   │   └── data/episode_*.parquet
+│   └── world_model/              # 世界模型格式（EgoVid 风格）
+│       ├── meta/{info.json, index.jsonl, stats.json}
+│       └── actions/episode_*.npy
+└── sample_report/                # 完整数据视频 + clip 语义标注
+    ├── index.html                # 浏览器打开即可查看
+    ├── clip_annotations.json     # 机器可读的语义标注
+    ├── episode_*.mp4             # 带字幕条的完整数据视频
+    └── episode_*_summary.png
 ```
+
+直接用浏览器打开 `examples/sample_report/index.html` 就能看到每条 clip 的视频、
+指令、按时间分段的语义标注与诊断图。
 
 ## 运行加载器示例
 
