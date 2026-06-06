@@ -93,6 +93,13 @@ class EgoVerseReader(BaseReader):
         left_hand = arrays.get("left_hand")
         right_hand = arrays.get("right_hand")
         gaze = arrays.get("gaze")
+        narrations = meta.get("narrations") or []
+
+        def narration_for(ts: float) -> str | None:
+            for seg in narrations:
+                if seg["start"] - 1e-6 <= ts <= seg["end"] + 1e-6:
+                    return seg["text"]
+            return narrations[-1]["text"] if narrations and ts > narrations[-1]["end"] else None
 
         frames: list[EgoFrame] = []
         for i in range(n):
@@ -117,6 +124,7 @@ class EgoVerseReader(BaseReader):
                         else None
                     ),
                     gaze=gaze[i] if gaze is not None else None,
+                    narration=narration_for(float(timestamps[i])),
                 )
             )
 

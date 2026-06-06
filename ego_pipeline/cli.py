@@ -21,6 +21,7 @@ from ego_pipeline.pipeline import (
     ExportTarget,
     PipelineConfig,
     ReaderConfig,
+    ReportConfig,
     VisualizeConfig,
     load_episodes,
     run_pipeline,
@@ -104,6 +105,56 @@ def cmd_visualize(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_video(args: argparse.Namespace) -> int:
+    from ego_pipeline.video import render_episode_video
+
+    config = PipelineConfig(
+        reader=ReaderConfig(args.reader, args.root, _parse_options(args.option)),
+        normalize=NormalizeConfig(target_fps=args.fps),
+        limit=args.limit,
+    )
+    episodes = load_episodes(config)
+    import os
+
+    os.makedirs(args.out, exist_ok=True)
+    paths = []
+    for ep in episodes:
+        safe = ep.episode_id.replace("/", "_")
+        path = render_episode_video(
+            ep,
+            os.path.join(args.out, f"{safe}.mp4"),
+            fps=args.video_fps,
+            width=args.width,
+            fmt=args.format,
+        )
+        paths.append(path)
+        print(f"  {ep.episode_id} -> {path}")
+    print(f"rendered {len(paths)} videos to {args.out}")
+    return 0
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    from ego_pipeline.report import build_report
+
+    config = PipelineConfig(
+        reader=ReaderConfig(args.reader, args.root, _parse_options(args.option)),
+        normalize=NormalizeConfig(target_fps=args.fps),
+        limit=args.limit,
+    )
+    episodes = load_episodes(config)
+    result = build_report(
+        episodes,
+        args.out,
+        with_video=not args.no_video,
+        with_summary=not args.no_summary,
+        video_fmt=args.format,
+        video_width=args.width,
+    )
+    print(json.dumps(result, indent=2))
+    print(f"\nopen {result['index_html']} in a browser to inspect clips")
+    return 0
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     if args.config:
         config = PipelineConfig.from_yaml(args.config)
@@ -119,6 +170,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                 hands_to_camera=args.hands_to_camera,
             ),
             visualize=VisualizeConfig(enabled=args.viz, out_dir=f"{out}/viz"),
+            report=ReportConfig(enabled=args.report, out_dir=f"{out}/report"),
             vla=ExportTarget(enabled=args.vla, out_dir=f"{out}/vla"),
             world_model=ExportTarget(enabled=args.world_model, out_dir=f"{out}/world_model"),
             limit=args.limit,
@@ -162,6 +214,33 @@ def build_parser() -> argparse.ArgumentParser:
     p_viz.add_argument("--limit", type=int)
     p_viz.set_defaults(func=cmd_visualize)
 
+    p_video = sub.add_parser("video", help="render full annotated data videos")
+    p_video.add_argument("--reader", required=True, choices=list_readers())
+    p_video.add_argument("--root", required=True)
+    p_video.add_argument("--out", required=True)
+    p_video.add_argument("--option", action="append")
+    p_video.add_argument("--fps", type=float, default=None, help="resample fps before render")
+    p_video.add_argument("--video-fps", type=float, default=None, help="playback fps")
+    p_video.add_argument("--width", type=int, default=640)
+    p_video.add_argument("--format", choices=["auto", "mp4", "gif"], default="auto")
+    p_video.add_argument("--limit", type=int)
+    p_video.set_defaults(func=cmd_video)
+
+    p_report = sub.add_parser(
+        "report", help="build an HTML clip-annotation + video report"
+    )
+    p_report.add_argument("--reader", required=True, choices=list_readers())
+    p_report.add_argument("--root", required=True)
+    p_report.add_argument("--out", required=True)
+    p_report.add_argument("--option", action="append")
+    p_report.add_argument("--fps", type=float, default=None)
+    p_report.add_argument("--width", type=int, default=640)
+    p_report.add_argument("--format", choices=["auto", "mp4", "gif"], default="auto")
+    p_report.add_argument("--no-video", action="store_true")
+    p_report.add_argument("--no-summary", action="store_true")
+    p_report.add_argument("--limit", type=int)
+    p_report.set_defaults(func=cmd_report)
+
     p_run = sub.add_parser("run", help="run the full pipeline")
     p_run.add_argument("--config", help="YAML config path")
     p_run.add_argument("--reader", choices=list_readers())
@@ -172,6 +251,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--no-recenter", action="store_true")
     p_run.add_argument("--hands-to-camera", action="store_true")
     p_run.add_argument("--viz", action="store_true")
+    p_run.add_argument("--report", action="store_true", help="build video + annotation report")
     p_run.add_argument("--vla", action="store_true")
     p_run.add_argument("--world-model", action="store_true")
     p_run.add_argument("--limit", type=int)

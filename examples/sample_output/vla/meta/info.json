@@ -3,7 +3,7 @@
   "robot_type": "egocentric_hand",
   "fps": null,
   "total_episodes": 2,
-  "total_frames": 12,
+  "total_frames": 16,
   "features": {
     "action": {
       "dtype": "float32",

@@ -10,6 +10,33 @@
     "cx": 320.0,
     "cy": 240.0
   },
+  "narrations": [
+    {
+      "start": 0.0,
+      "end": 0.047,
+      "text": "approach object"
+    },
+    {
+      "start": 0.047,
+      "end": 0.093,
+      "text": "reach and align"
+    },
+    {
+      "start": 0.093,
+      "end": 0.14,
+      "text": "grasp"
+    },
+    {
+      "start": 0.14,
+      "end": 0.187,
+      "text": "manipulate"
+    },
+    {
+      "start": 0.187,
+      "end": 0.233,
+      "text": "retract hand"
+    }
+  ],
   "metadata": {
     "synthetic_seed": 1
   }

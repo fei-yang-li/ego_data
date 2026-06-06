@@ -157,6 +157,48 @@ def test_full_pipeline_exports(tmp_path):
     assert len(stats["action"]["mean"]) == 7
 
 
+def test_narration_segments(tmp_path):
+    root = generate_dataset(
+        str(tmp_path / "synth"), num_episodes=1, num_frames=20, fps=30, render_rgb=False
+    )
+    ep = get_reader("egoverse")(root).read_all()[0]
+    segs = ep.narration_segments()
+    assert len(segs) >= 2
+    assert all(s["text"] for s in segs)
+    # Segments are time-ordered and non-overlapping-ish.
+    assert segs[0]["start"] <= segs[-1]["end"]
+    assert ep.narration_at(ep.frames[0].timestamp) is not None
+
+
+def test_render_episode_video_and_report(tmp_path):
+    from ego_pipeline.report import build_report
+    from ego_pipeline.video import render_episode_video
+
+    root = generate_dataset(
+        str(tmp_path / "synth"), num_episodes=2, num_frames=10, fps=30, render_rgb=True
+    )
+    episodes = get_reader("egoverse")(root).read_all()
+
+    vid = render_episode_video(episodes[0], str(tmp_path / "clip.mp4"), fps=10, width=320)
+    assert os.path.isfile(vid)
+    assert os.path.getsize(vid) > 0
+    assert vid.endswith((".mp4", ".gif"))
+
+    # GIF path always works (no codec dependency).
+    gif = render_episode_video(episodes[0], str(tmp_path / "clip2.gif"), fps=10, fmt="gif")
+    assert gif.endswith(".gif") and os.path.isfile(gif)
+
+    result = build_report(episodes, str(tmp_path / "report"))
+    assert os.path.isfile(result["index_html"])
+    anns = json.loads(open(result["annotations_json"], encoding="utf-8").read())
+    assert len(anns) == 2
+    assert anns[0]["narration_segments"]
+    assert "narration" in anns[0]["modalities"]
+    html = open(result["index_html"], encoding="utf-8").read()
+    assert "NARRATION" not in html or "narration segments" in html
+    assert "TASK" in html
+
+
 def test_dataset_loaders(tmp_path):
     from ego_pipeline.datasets import VLADataset, WorldModelDataset
 

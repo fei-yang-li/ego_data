@@ -241,6 +241,42 @@ class EgoEpisode:
             return 0.0
         return float((len(self.frames) - 1) / self.duration)
 
+    def narration_segments(self) -> list[dict[str, Any]]:
+        """Group consecutive frames sharing a narration into labelled segments.
+
+        Returns a list of ``{"start", "end", "text", "num_frames"}`` covering the
+        clip's per-frame ``narration`` annotations (empty if none are present).
+        This is the clip's temporal *semantic annotation* track.
+        """
+        segments: list[dict[str, Any]] = []
+        for f in self.frames:
+            text = (f.narration or "").strip()
+            if not text:
+                continue
+            if segments and segments[-1]["text"] == text:
+                segments[-1]["end"] = f.timestamp
+                segments[-1]["num_frames"] += 1
+            else:
+                segments.append(
+                    {
+                        "start": f.timestamp,
+                        "end": f.timestamp,
+                        "text": text,
+                        "num_frames": 1,
+                    }
+                )
+        return segments
+
+    def narration_at(self, timestamp: float) -> str | None:
+        """Return the narration active at ``timestamp`` (nearest preceding frame)."""
+        active = None
+        for f in self.frames:
+            if f.timestamp <= timestamp + 1e-9 and f.narration:
+                active = f.narration
+            elif f.timestamp > timestamp:
+                break
+        return active
+
     def head_positions(self) -> np.ndarray:
         """``(T, 3)`` world positions of the head/camera (NaN where missing)."""
         out = np.full((len(self.frames), 3), np.nan, dtype=np.float64)

@@ -4,3 +4,6 @@ pillow>=9.0
 pandas>=1.5
 pyarrow>=10.0
 PyYAML>=6.0
+# Optional: enables MP4 export for `video`/`report`. Without it, those commands
+# transparently fall back to animated GIF (PIL only).
+opencv-python-headless>=4.6

@@ -48,6 +48,18 @@ class VisualizeConfig:
 
 
 @dataclass
+class ReportConfig:
+    enabled: bool = False
+    out_dir: str = "out/report"
+    with_video: bool = True
+    with_summary: bool = True
+    video_fmt: str = "auto"
+    video_fps: float | None = None
+    video_width: int | None = 640
+    max_episodes: int | None = 20
+
+
+@dataclass
 class ExportTarget:
     enabled: bool = False
     out_dir: str = ""
@@ -59,6 +71,7 @@ class PipelineConfig:
     reader: ReaderConfig = field(default_factory=ReaderConfig)
     normalize: NormalizeConfig = field(default_factory=NormalizeConfig)
     visualize: VisualizeConfig = field(default_factory=VisualizeConfig)
+    report: ReportConfig = field(default_factory=ReportConfig)
     vla: ExportTarget = field(default_factory=ExportTarget)
     world_model: ExportTarget = field(default_factory=ExportTarget)
     limit: int | None = None
@@ -68,6 +81,7 @@ class PipelineConfig:
         reader = ReaderConfig(**d.get("reader", {}))
         normalize = NormalizeConfig(**d.get("normalize", {}))
         visualize = VisualizeConfig(**d.get("visualize", {}))
+        report = ReportConfig(**d.get("report", {}))
         export = d.get("export", {})
         vla = ExportTarget(
             enabled=export.get("vla", {}).get("enabled", False),
@@ -85,6 +99,7 @@ class PipelineConfig:
             reader=reader,
             normalize=normalize,
             visualize=visualize,
+            report=report,
             vla=vla,
             world_model=world_model,
             limit=d.get("limit"),
@@ -140,6 +155,22 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Any]:
             "out_dir": config.visualize.out_dir,
             "num_files": len(viz_paths),
         }
+
+    if config.report.enabled and episodes:
+        from ego_pipeline.report import build_report
+
+        subset = episodes
+        if config.report.max_episodes is not None:
+            subset = episodes[: config.report.max_episodes]
+        report["outputs"]["report"] = build_report(
+            subset,
+            config.report.out_dir,
+            with_video=config.report.with_video,
+            with_summary=config.report.with_summary,
+            video_fmt=config.report.video_fmt,
+            video_fps=config.report.video_fps,
+            video_width=config.report.video_width,
+        )
 
     if config.vla.enabled and episodes:
         from ego_pipeline.exporters import VLAExporter

@@ -154,6 +154,28 @@ actions/<id>.npy  (T-1, 6) 相机位姿增量
 - `render_frame_overlay`：将手部骨架投影叠加到 RGB 帧（或空白画布）+ 注视点，
   用于排查标定 / 坐标系错误。
 
+## 完整数据视频 + clip 语义标注（`video.py` / `report.py`）
+
+- **完整数据视频**（`render_episode_video`）：把整条 episode 渲染成可播放视频
+  （MP4，无 OpenCV/ffmpeg 时自动回退 GIF）。每帧叠加手部骨架 + 注视点，并在底部
+  字幕条显示 **TASK（clip 指令）**、**NARRATION（当前时刻的语义标注）**、时间/进度。
+- **clip 语义标注**：`EgoEpisode.narration_segments()` 把逐帧 `narration` 聚合成
+  带时间区间的语义片段；`build_report` 生成可浏览的 `index.html` 画廊
+  （每个 clip：内嵌视频 + 指令 + narration 分段表 + 模态覆盖 + 诊断图）以及
+  机器可读的 `clip_annotations.json`。
+
+```bash
+# 只渲染视频
+python -m ego_pipeline video  --reader egoverse --root out/synthetic --out out/videos --video-fps 12
+
+# 生成「视频 + 语义标注」HTML 报告，浏览器打开 out/report/index.html
+python -m ego_pipeline report --reader egoverse --root out/synthetic --out out/report
+```
+
+> `examples/sample_report/` 下已附带一份生成好的报告（含 MP4 + `clip_annotations.json`）。
+> 语义标注来源：reader 读取的逐帧 `narration`（EgoVerse 从 `meta.json` 的
+> `narrations` 区间、EPIC-KITCHENS 从动作旁白）。
+
 ---
 
 ## 命令行总览
@@ -162,8 +184,10 @@ actions/<id>.npy  (T-1, 6) 相机位姿增量
 python -m ego_pipeline synth     --out DIR [--episodes N --frames N --fps F --no-rgb]
 python -m ego_pipeline inspect   --reader NAME --root PATH [--limit N --option k=v]
 python -m ego_pipeline visualize --reader NAME --root PATH --out DIR [--fps F --limit N]
+python -m ego_pipeline video     --reader NAME --root PATH --out DIR [--video-fps F --width W --format auto|mp4|gif]
+python -m ego_pipeline report    --reader NAME --root PATH --out DIR [--format auto|mp4|gif --no-video --no-summary]
 python -m ego_pipeline run        --config config.yaml
-python -m ego_pipeline run        --reader NAME --root PATH --out DIR [--fps F --viz --vla --world-model]
+python -m ego_pipeline run        --reader NAME --root PATH --out DIR [--fps F --viz --report --vla --world-model]
 ```
 
 ## 训练数据加载器（`datasets.py`）

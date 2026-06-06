@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<title>Ego clip annotations</title><style>
+body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#0f1116;color:#e6e6e6}
+header{padding:16px 24px;background:#161922;border-bottom:1px solid #262b36}
+h1{margin:0;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;padding:20px}
+.card{background:#161922;border:1px solid #262b36;border-radius:10px;padding:14px}
+.card h2{font-size:15px;margin:0 0 6px}
+.src{font-size:11px;color:#7f8a9a;font-weight:normal}
+.instr{color:#78dcff;margin:4px 0;font-size:13px}
+.meta{color:#9aa3b2;font-size:12px;margin:4px 0}
+.tag{background:#23314a;color:#a9c7ff;border-radius:4px;padding:1px 6px;font-size:11px;margin-right:2px}
+.media{margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #2a3140;padding:4px 6px;text-align:left}
+th{background:#1d2230}
+details{margin-top:8px}
+summary{cursor:pointer;color:#ffd778;font-size:13px}
+</style></head><body>
+<header><h1>Egocentric 数据视频 &amp; clip 语义标注</h1></header>
+<div class="grid">
+
+    <div class="card">
+      <h2>episode_0000 <span class="src">synthetic</span></h2>
+      <p class="instr">TASK: pick up the mug and place it on the shelf</p>
+      <p class="meta">8 frames · 0.233s · 30.0 fps · <span class="tag">rgb</span> <span class="tag">head_pose</span> <span class="tag">hands</span> <span class="tag">gaze</span> <span class="tag">narration</span></p>
+      <div class="media"><video controls loop muted width="100%" src="episode_0000.mp4"></video></div>
+      <details open><summary>语义标注 / narration segments</summary>
+        <table><tr><th>start (s)</th><th>end (s)</th><th>narration</th></tr><tr><td>0.00</td><td>0.03</td><td>approach object</td></tr><tr><td>0.07</td><td>0.07</td><td>reach and align</td></tr><tr><td>0.10</td><td>0.13</td><td>grasp</td></tr><tr><td>0.17</td><td>0.17</td><td>manipulate</td></tr><tr><td>0.20</td><td>0.23</td><td>retract hand</td></tr></table>
+      </details>
+      <details><summary>诊断图 / diagnostics</summary><img src="episode_0000_summary.png" width="100%" alt="summary"/></details>
+    </div>
+    
+
+    <div class="card">
+      <h2>episode_0001 <span class="src">synthetic</span></h2>
+      <p class="instr">TASK: open the drawer and take out the spoon</p>
+      <p class="meta">8 frames · 0.233s · 30.0 fps · <span class="tag">rgb</span> <span class="tag">head_pose</span> <span class="tag">hands</span> <span class="tag">gaze</span> <span class="tag">narration</span></p>
+      <div class="media"><video controls loop muted width="100%" src="episode_0001.mp4"></video></div>
+      <details open><summary>语义标注 / narration segments</summary>
+        <table><tr><th>start (s)</th><th>end (s)</th><th>narration</th></tr><tr><td>0.00</td><td>0.03</td><td>approach object</td></tr><tr><td>0.07</td><td>0.07</td><td>reach and align</td></tr><tr><td>0.10</td><td>0.13</td><td>grasp</td></tr><tr><td>0.17</td><td>0.17</td><td>manipulate</td></tr><tr><td>0.20</td><td>0.23</td><td>retract hand</td></tr></table>
+      </details>
+      <details><summary>诊断图 / diagnostics</summary><img src="episode_0001_summary.png" width="100%" alt="summary"/></details>
+    </div>
+    
+</div></body></html>
