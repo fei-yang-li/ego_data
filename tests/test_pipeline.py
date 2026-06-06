@@ -155,3 +155,37 @@ def test_full_pipeline_exports(tmp_path):
     # Stats are well-formed.
     stats = json.loads((out / "vla" / "meta" / "stats.json").read_text())
     assert len(stats["action"]["mean"]) == 7
+
+
+def test_dataset_loaders(tmp_path):
+    from ego_pipeline.datasets import VLADataset, WorldModelDataset
+
+    root = generate_dataset(
+        str(tmp_path / "synth"), num_episodes=2, num_frames=12, fps=30, render_rgb=True
+    )
+    out = tmp_path / "out"
+    config = PipelineConfig(
+        reader=ReaderConfig("egoverse", root),
+        normalize=NormalizeConfig(target_fps=10),
+        vla=ExportTarget(enabled=True, out_dir=str(out / "vla")),
+        world_model=ExportTarget(enabled=True, out_dir=str(out / "wm")),
+    )
+    run_pipeline(config)
+
+    vla = VLADataset(str(out / "vla"), load_images=True, action_horizon=4, normalize=True)
+    assert len(vla) > 0
+    item = vla[1]
+    assert item["state"].shape == (7,)
+    assert item["action"].shape == (7,)
+    assert item["action_chunk"].shape == (4, 7)
+    assert item["image"].ndim == 3  # decoded RGB
+    # Normalized values stay within [-1, 1].
+    assert np.all(np.abs(item["action"]) <= 1.0 + 1e-6)
+
+    wm = WorldModelDataset(str(out / "wm"), load_images=False)
+    assert len(wm) == 2
+    clip = wm[0]
+    assert clip["actions"].shape[1] == 6
+    assert len(clip["frames"]) == clip["actions"].shape[0] + 1
+    assert clip["caption"]
+
