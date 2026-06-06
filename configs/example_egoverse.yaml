@@ -1,0 +1,31 @@
+# Example pipeline config for an EgoVerse-style pose-rich dataset.
+# Run with:  python -m ego_pipeline run --config configs/example_egoverse.yaml
+
+reader:
+  name: egoverse
+  root: out/synthetic        # directory of <episode>/poses.npz + meta.json (+ rgb/)
+  options: {}
+
+normalize:
+  target_fps: 10             # resample onto a uniform 10 Hz grid (null to disable)
+  recenter_trajectory: true  # start each episode at the world origin
+  align_start_orientation: false
+  hands_to_camera: false     # keep hand keypoints in world frame
+  min_frames: 2
+
+visualize:
+  enabled: true
+  out_dir: out/viz
+  num_overlay_frames: 4
+  max_episodes: 8
+
+export:
+  vla:
+    enabled: true
+    out_dir: out/vla
+    hand: right              # which hand drives the end-effector action
+  world_model:
+    enabled: true
+    out_dir: out/world_model
+
+limit: null                  # cap number of episodes (null = all)
