@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from ego_pipeline.normalize import NormalizeConfig
@@ -114,8 +115,6 @@ def cmd_video(args: argparse.Namespace) -> int:
         limit=args.limit,
     )
     episodes = load_episodes(config)
-    import os
-
     os.makedirs(args.out, exist_ok=True)
     paths = []
     for ep in episodes:
@@ -152,6 +151,16 @@ def cmd_report(args: argparse.Namespace) -> int:
     )
     print(json.dumps(result, indent=2))
     print(f"\nopen {result['index_html']} in a browser to inspect clips")
+    return 0
+
+
+def cmd_viewer(args: argparse.Namespace) -> int:
+    from ego_pipeline.viewer import viewer_from_annotations_file
+
+    out = args.out or os.path.join(os.path.dirname(os.path.abspath(args.annotations)), "index.html")
+    path = viewer_from_annotations_file(args.annotations, out, media_dir=args.media_dir)
+    print(f"interactive viewer written to: {path}")
+    print("open it directly in a browser (data is inlined, no server needed)")
     return 0
 
 
@@ -240,6 +249,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_report.add_argument("--no-summary", action="store_true")
     p_report.add_argument("--limit", type=int)
     p_report.set_defaults(func=cmd_report)
+
+    p_viewer = sub.add_parser(
+        "viewer", help="(re)build the interactive HTML viewer from clip_annotations.json"
+    )
+    p_viewer.add_argument("--annotations", required=True, help="path to clip_annotations.json")
+    p_viewer.add_argument("--out", help="output HTML path (default: <annotations dir>/index.html)")
+    p_viewer.add_argument("--media-dir", help="dir holding *.mp4/*.gif/*_summary.png")
+    p_viewer.set_defaults(func=cmd_viewer)
 
     p_run = sub.add_parser("run", help="run the full pipeline")
     p_run.add_argument("--config", help="YAML config path")

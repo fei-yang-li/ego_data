@@ -46,8 +46,7 @@
       }
     ],
     "metadata": {
-      "synthetic_seed": 0,
-      "recentered": true
+      "synthetic_seed": 0
     }
   },
   {
@@ -97,8 +96,7 @@
       }
     ],
     "metadata": {
-      "synthetic_seed": 1,
-      "recentered": true
+      "synthetic_seed": 1
     }
   }
 ]

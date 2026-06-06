@@ -176,6 +176,25 @@ python -m ego_pipeline report --reader egoverse --root out/synthetic --out out/r
 > 语义标注来源：reader 读取的逐帧 `narration`（EgoVerse 从 `meta.json` 的
 > `narrations` 区间、EPIC-KITCHENS 从动作旁白）。
 
+### 交互式数据可视化 HTML（`viewer.py` + `assets/viewer_template.html`）
+
+`build_report` 生成的 `index.html` 是一个**自包含的交互式单页应用**（纯原生 JS，
+数据已内联——双击打开即可，无需起本地服务器）：
+
+- 顶部统计（clip 数 / 总帧数 / 总时长 / 来源）
+- **搜索**（按 id / 指令 / narration 文本）+ **按来源、按模态过滤**
+- 每个 clip 卡片含 **narration 语义标注时间轴**（彩色分段，hover 看文本+时间）
+- 点击卡片弹出详情：内嵌视频 + 时间轴 + 语义标注表 + metadata + 诊断图
+
+同时还会写一个无 JS 的静态版 `gallery.html` 作为后备。也可以从已有的
+`clip_annotations.json` 单独（重新）生成查看器，不必重渲染视频：
+
+```bash
+python -m ego_pipeline viewer --annotations out/report/clip_annotations.json --out out/report/index.html
+```
+
+> 浏览器直接打开 `examples/sample_report/index.html` 即可体验。
+
 ---
 
 ## 命令行总览
@@ -186,6 +205,7 @@ python -m ego_pipeline inspect   --reader NAME --root PATH [--limit N --option k
 python -m ego_pipeline visualize --reader NAME --root PATH --out DIR [--fps F --limit N]
 python -m ego_pipeline video     --reader NAME --root PATH --out DIR [--video-fps F --width W --format auto|mp4|gif]
 python -m ego_pipeline report    --reader NAME --root PATH --out DIR [--format auto|mp4|gif --no-video --no-summary]
+python -m ego_pipeline viewer    --annotations clip_annotations.json [--out index.html --media-dir DIR]
 python -m ego_pipeline run        --config config.yaml
 python -m ego_pipeline run        --reader NAME --root PATH --out DIR [--fps F --viz --report --vla --world-model]
 ```

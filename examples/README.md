@@ -18,14 +18,15 @@ examples/
 │       ├── meta/{info.json, index.jsonl, stats.json}
 │       └── actions/episode_*.npy
 └── sample_report/                # 完整数据视频 + clip 语义标注
-    ├── index.html                # 浏览器打开即可查看
+    ├── index.html                # 交互式可视化（搜索/过滤/narration 时间轴，双击打开）
+    ├── gallery.html              # 无 JS 的静态后备版
     ├── clip_annotations.json     # 机器可读的语义标注
     ├── episode_*.mp4             # 带字幕条的完整数据视频
     └── episode_*_summary.png
 ```
 
-直接用浏览器打开 `examples/sample_report/index.html` 就能看到每条 clip 的视频、
-指令、按时间分段的语义标注与诊断图。
+直接用浏览器打开 `examples/sample_report/index.html` 就能交互式浏览每条 clip 的视频、
+指令、按时间分段的语义标注时间轴与诊断图（支持搜索与按来源/模态过滤）。
 
 ## 运行加载器示例
 

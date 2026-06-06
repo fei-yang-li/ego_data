@@ -140,6 +140,8 @@ def build_report(
     annotations = []
     cards = []
 
+    viewer_records = []  # annotations + media paths, for the interactive viewer
+
     for ep in episodes:
         ann = clip_annotation(ep)
         annotations.append(ann)
@@ -165,17 +167,31 @@ def build_report(
             summary_rel = os.path.basename(sp)
 
         cards.append(_clip_card(ann, video_rel, summary_rel))
+        rec = dict(ann)
+        if video_rel:
+            rec["_video"] = video_rel
+        if summary_rel:
+            rec["_summary"] = summary_rel
+        viewer_records.append(rec)
 
     with open(os.path.join(out_dir, "clip_annotations.json"), "w", encoding="utf-8") as fh:
         json.dump(annotations, fh, indent=2, ensure_ascii=False)
 
-    html_path = os.path.join(out_dir, "index.html")
-    with open(html_path, "w", encoding="utf-8") as fh:
+    # index.html = interactive viewer (search / filter / narration timeline);
+    # gallery.html = simple static fallback (no JS).
+    from ego_pipeline.viewer import render_viewer
+
+    index_html = os.path.join(out_dir, "index.html")
+    render_viewer(viewer_records, index_html)
+
+    gallery_html = os.path.join(out_dir, "gallery.html")
+    with open(gallery_html, "w", encoding="utf-8") as fh:
         fh.write(_HTML_HEAD + "\n".join(cards) + "\n</div></body></html>")
 
     return {
         "out_dir": out_dir,
-        "index_html": html_path,
+        "index_html": index_html,
+        "gallery_html": gallery_html,
         "annotations_json": os.path.join(out_dir, "clip_annotations.json"),
         "num_clips": len(annotations),
     }

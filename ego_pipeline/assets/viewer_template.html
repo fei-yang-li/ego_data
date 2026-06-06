@@ -75,7 +75,7 @@
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
 
 <script>
-const CLIPS = [{"episode_id": "episode_0000", "source": "synthetic", "language_instruction": "pick up the mug and place it on the shelf", "duration_s": 0.233, "fps": 30.0, "num_frames": 8, "modalities": ["rgb", "head_pose", "hands", "gaze", "narration"], "narration_segments": [{"start": 0.0, "end": 0.033, "text": "approach object", "num_frames": 2}, {"start": 0.067, "end": 0.067, "text": "reach and align", "num_frames": 1}, {"start": 0.1, "end": 0.133, "text": "grasp", "num_frames": 2}, {"start": 0.167, "end": 0.167, "text": "manipulate", "num_frames": 1}, {"start": 0.2, "end": 0.233, "text": "retract hand", "num_frames": 2}], "metadata": {"synthetic_seed": 0}, "_video": "episode_0000.mp4", "_summary": "episode_0000_summary.png"}, {"episode_id": "episode_0001", "source": "synthetic", "language_instruction": "open the drawer and take out the spoon", "duration_s": 0.233, "fps": 30.0, "num_frames": 8, "modalities": ["rgb", "head_pose", "hands", "gaze", "narration"], "narration_segments": [{"start": 0.0, "end": 0.033, "text": "approach object", "num_frames": 2}, {"start": 0.067, "end": 0.067, "text": "reach and align", "num_frames": 1}, {"start": 0.1, "end": 0.133, "text": "grasp", "num_frames": 2}, {"start": 0.167, "end": 0.167, "text": "manipulate", "num_frames": 1}, {"start": 0.2, "end": 0.233, "text": "retract hand", "num_frames": 2}], "metadata": {"synthetic_seed": 1}, "_video": "episode_0001.mp4", "_summary": "episode_0001_summary.png"}];
+const CLIPS = __CLIP_DATA__;
 const PALETTE = ["#78dcff","#ffd778","#9ae6a4","#ff9e7a","#c9a0ff","#7ad7c4","#ff8fb0","#b6c97a"];
 
 function color(i){ return PALETTE[i % PALETTE.length]; }
